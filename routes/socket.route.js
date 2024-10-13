@@ -89,7 +89,7 @@ const listenAndInformPlayers = (instance) => {
 }
 
 module.exports = (app, factory = new GameFactory()) => {
-    expressWs(app)
+    expressWs(app);
     
     factory.create(new Game({ noOfPlayers: 4 })) //ONLY FOR TESTS
 
