@@ -44,7 +44,8 @@ const playTurn = (game) => {
     }
     else {
         //check that player can match the move used last (NOT to be used for general market)
-        if (player.toPick > 1 && player.canMatchMove()) {
+        // console.log(player)
+        if (player.toPick > 1 && player.canPlay()) {
             player.socket.json({ message: Events.TURN_SWITCH })
         }
         else {
