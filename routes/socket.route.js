@@ -156,7 +156,7 @@ module.exports = (app, factory = new GameFactory()) => {
                                             instance.sockets.broadcast({ message: Events.PLAY, id: ws.id, card }, ws) //broadcast to all except current ws
                                             ws.json({ message: Events.PLAYER_HAND, hand: player.hand() })
                                             game.turn.execute(game.pile.top())
-                                            setTimeout(() => playTurn(game), 1000)
+                                            setTimeout(() => playTurn(game, instance), 1000)
                                         }
                                         else {
                                             errorThrow('error:could-not-play-card:' + cardIndex, ws)
@@ -187,7 +187,7 @@ module.exports = (app, factory = new GameFactory()) => {
                                     ws.json({ message: Events.MARKET_PICK, cards: player.pick() })
                                     ws.json({ message: Events.PLAYER_HAND, hand: player.hand() })
                                     game.turn.switch()
-                                    playTurn(game)
+                                    playTurn(game, instance)
                                 }, 1000)
                             }
                             else {
