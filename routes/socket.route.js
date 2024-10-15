@@ -37,26 +37,25 @@ const errorThrow = (err, ws) => {
     }
 }
 
-const playTurn = (game) => {
-    const player = game.turn.next()
+const playTurn = (game, instance) => {
+    const player = game.turn.next();
+    instance.sockets.players.broadcast({ message: 'current:player', playerId: player.id }); // Broadcast current player ID
+
     if (player.canPlay()) {
-        player.socket.json({ message: Events.TURN_SWITCH })
-    }
-    else {
-        //check that player can match the move used last (NOT to be used for general market)
-        // console.log(player)
+        player.socket.json({ message: Events.TURN_SWITCH });
+    } else {
         if (player.toPick > 1 && player.canPlay()) {
-            player.socket.json({ message: Events.TURN_SWITCH })
-        }
-        else {
-            //pick cards from the market and switch to the next player
-            player.pick()
-            player.socket.json({ message: Events.PLAYER_HAND, hand: player.hand() })
-            game.turn.switch()
-            playTurn(game)
+            player.socket.json({ message: Events.TURN_SWITCH });
+        } else {
+            // Pick cards from the market and switch to the next player
+            player.pick();
+            player.socket.json({ message: Events.PLAYER_HAND, hand: player.hand() });
+            game.turn.switch();
+            playTurn(game, instance); // Pass the instance to ensure broadcast continues
         }
     }
-}
+};
+
 
 const listenAndInformPlayers = (instance) => {
     const game = instance.game;
@@ -130,12 +129,12 @@ module.exports = (app, factory = new GameFactory()) => {
 
                 //start game
                 if (instance.sockets.players.length === game.turn.count() && instance.sockets.listeners.length === 0) {
-                    instance.sockets.broadcast({ message: Events.GAME_START, pile: game.pile.top() })
+                    instance.sockets.broadcast({ message: Events.GAME_START, pile: game.pile.top() });
                     game.turn.all((player) => {
-                        player.socket.json({ message: Events.PLAYER_HAND, hand: player.hand() })
-                    })
+                        player.socket.json({ message: Events.PLAYER_HAND, hand: player.hand() });
+                    });
                     
-                    playTurn(game)
+                    playTurn(game, instance); // Pass the instance to playTurn for broadcasting current player
                 }
 
                 // Listen for events and inform players about certain game events
