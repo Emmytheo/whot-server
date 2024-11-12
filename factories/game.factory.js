@@ -21,14 +21,14 @@ function GameFactory() {
       sockets.players
         .filter((ws) => !exceptWs || ws != exceptWs)
         .forEach((socket) => {
-          socket.json(data);
+          socket.send(JSON.stringify(data));
         });
     };
     sockets.listeners.broadcast = (data, exceptWs) => {
       sockets.listeners
         .filter((ws) => !exceptWs || ws != exceptWs)
         .forEach((socket) => {
-          socket.json(data);
+          socket.send(JSON.stringify(data));
         });
     };
     sockets.broadcast = (data, exceptWs) => {

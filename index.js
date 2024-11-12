@@ -1,39 +1,44 @@
-const express = require('express')
-const path = require('path')
-const bodyParser = require('body-parser')
-const GameFactory = require('./factories/game.factory')
-const factory = new GameFactory()
-const indexRoute = require('./routes/index.route')
-const gameRoute = require('./routes/game.route')(factory)
-const socketRoute = require('./routes/socket.route')
+// server.js
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const WebSocket = require("ws");
+const socketRoute = require("./routes/socket.route");
+const { app1Router, factory } = require("./whot_server");
+const { app2Router } = require("./draught_server");
+const { draughtSocketRoute } = require("./draughtSocketRoute");
 
-app = express()
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: false }))
+// Mount each app's router on a different path
+app.use("/whot", app1Router);
+app.use("/draughts", app2Router);
 
-app.use(require('./utils/cross-domain'))
+const wss1 = socketRoute(app1Router, factory);
 
-app.use('/', indexRoute)
-app.use('/games/', gameRoute)
+// WebSocket server for draughts using 'ws' package
+const wss = draughtSocketRoute();
 
-socketRoute(app, factory)
+// Handle upgrading requests for WebSocket connections on the `/draughts` route
+server.on("upgrade", (request, socket, head) => {
+  const pathname = request.url;
+  if (pathname === "/draughts/") {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit("connection", ws, request);
+    });
+  } else if (pathname.split("/")[1] === "whot") {
+    wss1.handleUpgrade(request, socket, head, (ws) => {
+      wss1.emit("connection", ws, request);
+    });
+  } else {
+    socket.destroy();
+  }
+});
 
-app.use(function(req, res, next) {
-    var err = new Error('Not Found')
-    err.status = 404
-    next(err)
-})
-
-app.use(function(err, req, res, next) {
-    res.status(err.status || 500)
-    res.send(err.toString())
-})
-
-if (require.main === module) {
-    var listener = app.listen(process.env.PORT || 8800, function(){
-        console.log('Listening on port ' + listener.address().port)
-    })
-}
-  
-module.exports = app
+// Start the server
+const PORT = process.env.PORT || 8800;
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

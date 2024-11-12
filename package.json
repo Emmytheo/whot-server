@@ -23,10 +23,14 @@
   "homepage": "https://github.com/mykeels/whot-server#readme",
   "dependencies": {
     "body-parser": "^1.18.2",
+    "draught-server": "file:",
     "express": "^4.16.2",
     "express-res-status": "^1.0.2",
     "express-ws": "^5.0.2",
+    "socket.io": "^4.8.1",
+    "uuid": "^10.0.0",
     "whot": "^1.0.5",
-    "whot-server": "file:"
+    "whot-server": "file:",
+    "ws": "^8.18.0"
   }
 }
